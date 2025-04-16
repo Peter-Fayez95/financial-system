@@ -17,17 +17,21 @@ def create_tables(conn) -> None:
 
         -- CurrencyExchange Table
         CREATE TABLE CurrencyExchange (
-            id SERIAL PRIMARY KEY,
+            exchange_id SERIAL PRIMARY KEY,
             timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
             from_currency VARCHAR(3) NOT NULL,
             to_currency VARCHAR(3) NOT NULL,
             rate NUMERIC(, 2) NOT NULL
         );
+                   
+        -- Create enum type
+        CREATE TYPE transaction_type
+        AS ENUM ('AccountCreated', 'DepositMade', 'WithdrawalMade', 'MoneyTransferred', 'CurrencyConverted', 'ExchangeRateUpdated')
 
         -- Transaction Table
         CREATE TABLE Transaction (
-            id SERIAL PRIMARY KEY,
-            type VARCHAR(20) NOT NULL,
+            transaction_id SERIAL PRIMARY KEY,
+            type transaction_type NOT NULL,
             from_account INTEGER REFERENCES Account(id),
             to_account INTEGER REFERENCES Account(id),
             timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
