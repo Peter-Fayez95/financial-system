@@ -78,3 +78,29 @@ class TransactionService:
                 from_currency, to_currency, amount
             )
             return transaction_id
+        
+
+    def convert_currency(self, account_id, from_currency, to_currency, amount):
+        with self.db_conn.connect() as conn:
+            
+            # Get exchange rate if currencies differ
+            if from_currency != to_currency:
+                exchange = get_latest_rate(conn, from_currency, to_currency)
+                if not exchange:
+                    raise ValueError("No exchange rate available")
+                to_amount = amount * exchange.rate
+            else:
+                to_amount = amount
+
+            to_amount = round(to_amount, 2)
+
+            # Update balances
+            update_balance(conn, account_id, from_currency, -amount)
+            update_balance(conn, account_id, to_currency, to_amount)
+
+            # Record transaction
+            transaction_id = create_transaction(
+                conn, "CurrencyConverted", account_id, account_id,
+                from_currency, to_currency, amount
+            )
+            return transaction_id

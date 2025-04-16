@@ -1,6 +1,6 @@
 import click
 from services.account_service import create_account
-from services.transaction_service import deposit
+from services.transaction_service import deposit, withdraw, convert_currency
 from decimal import Decimal
 
 VALID_CURRENCIES = {"USD", "EUR", "GBP"}
@@ -94,7 +94,10 @@ def transfer(from_account, to_account, from_currency, amount, to_currency):
 @click.option("--to-currency", required=False, callback=validate_currency,
               help="Currency to convert to (optional).")
 def convert_currency(account_id, from_currency, amount, to_currency):
-    click.echo(f"[CONVERT] Account: {account_id}, {amount:.2f} {from_currency} to {to_currency or '[DEFAULT]'}")
+    click.echo(f"[CONVERT CURRENCY] Account: {account_id}, {amount:.2f} {from_currency} to {to_currency or '[DEFAULT]'}")
+    transaction_id = convert_currency(account_id, from_currency, to_currency, amount)
+    click.echo(f"Converted {amount} in {from_currency} to {to_currency}")
+
 
 @cli.command(help="Update currency conversion rate.")
 @click.option("--from-currency", required=True, callback=validate_currency, help="Source currency.")
