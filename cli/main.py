@@ -47,28 +47,27 @@ def cli():
               help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=50).")
 def create_account(account_id, initial_balance):
     click.echo(f"[CREATE ACCOUNT], Balances: {initial_balance}")
-    currency_dict = parse_currency_list(initial_balance)
-    account_id = create_account(currency_dict)
+    account_id = create_account(**initial_balance)
     click.echo(f"Created account with ID: {account_id}.")
 
 
 @cli.command(help="Deposit currencies into an account.")
 @click.option("--account-id", required=True, help="Account ID to deposit into.")
-@click.option("--currencies", required=True, callback=parse_currency_list,
-              help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=20).")
-def deposit(account_id, currencies):
-    click.echo(f"[DEPOSIT] Account: {account_id}, Currencies: {currencies}")
-    transaction_id = deposit(account_id, currencies)
-    click.echo(f"Deposited money into Account: {account_id}, Curriencies: {currencies}")
+@click.option("--currency", required=True, help="Currency")
+@click.option("--amount", required=True, help="Amount to be deposited")
+def deposit(account_id, currency, amount):
+    click.echo(f"[DEPOSIT] Account: {account_id}, Currency: {currency}")
+    transaction_id = deposit(account_id, currency, amount)
+    click.echo(f"Deposited money into Account: {account_id}, Currency: {currency}, Amount: {amount}")
 
 @cli.command(help="Withdraw currencies from an account.")
 @click.option("--account-id", required=True, help="Account ID to withdraw from.")
-@click.option("--currencies", required=True, callback=parse_currency_list,
-              help="Comma-separated list of CUR=AMT (e.g. USD=50).")
-def withdraw(account_id, currencies):
-    click.echo(f"[WITHDRAW] Account: {account_id}, Currencies: {currencies}")
-    transaction_id = withdraw(account_id, currencies)
-    click.echo(f"Deposited money into Account: {account_id}, Curriencies: {currencies}")
+@click.option("--currency", required=True, help="Currency")
+@click.option("--amount", required=True, help="Amount to be withdrawn.")
+def withdraw(account_id, currency, amount):
+    click.echo(f"[WITHDRAW] Account: {account_id}, Currency: {currency}")
+    transaction_id = withdraw(account_id, currency, amount)
+    click.echo(f"Withdrawn money from Account: {account_id}, Currency: {currency}, Amount: {amount}")
 
 @cli.command(help="Transfer money between accounts (same or different currencies).")
 @click.option("--from-account", required=True, help="Sender's account ID.")
@@ -80,6 +79,7 @@ def withdraw(account_id, currencies):
 def transfer(from_account, to_account, from_currency, amount, to_currency):
     click.echo(f"[TRANSFER] {amount:.2f} {from_currency} from {from_account} to {to_account}" +
                (f" as {to_currency}" if to_currency else ""))
+    
 
 @cli.command(help="Convert currency within a single account.")
 @click.option("--account-id", required=True, help="Account ID.")

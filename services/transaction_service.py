@@ -39,7 +39,7 @@ class TransactionService:
         with self.db_conn.connect() as conn:
             update_balance(conn, account_id, currency, -amount)
             transaction_id = create_transaction(
-                conn, account_id, "DepositMade", account_id, 
+                conn, account_id, "WithdrawalMade", account_id, 
                 account_id, currency, currency, amount
             )
             return transaction_id
