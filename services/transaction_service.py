@@ -66,6 +66,8 @@ class TransactionService:
             else:
                 to_amount = amount
 
+            to_amount = round(to_amount, 2)
+
             # Update balances
             update_balance(conn, from_account_id, from_currency, -amount)
             update_balance(conn, to_account_id, to_currency, to_amount)

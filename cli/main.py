@@ -79,6 +79,12 @@ def withdraw(account_id, currency, amount):
 def transfer(from_account, to_account, from_currency, amount, to_currency):
     click.echo(f"[TRANSFER] {amount:.2f} {from_currency} from {from_account} to {to_account}" +
                (f" as {to_currency}" if to_currency else ""))
+    transaction_id = transfer(from_account, to_account, from_currency, to_currency, amount)
+    click.echo(f"Transferred money from Account: {from_account}, To Account: {to_account}")
+    if to_currency != from_currency:
+        click.echo(f"Converted Amount: {amount} in {from_currency} To {to_currency}")
+    else:
+        click.echo(f"Currency: {from_currency}, Amount: {amount}")
     
 
 @cli.command(help="Convert currency within a single account.")
