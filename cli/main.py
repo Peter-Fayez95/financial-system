@@ -67,6 +67,8 @@ def deposit(account_id, currencies):
               help="Comma-separated list of CUR=AMT (e.g. USD=50).")
 def withdraw(account_id, currencies):
     click.echo(f"[WITHDRAW] Account: {account_id}, Currencies: {currencies}")
+    transaction_id = withdraw(account_id, currencies)
+    click.echo(f"Deposited money into Account: {account_id}, Curriencies: {currencies}")
 
 @cli.command(help="Transfer money between accounts (same or different currencies).")
 @click.option("--from-account", required=True, help="Sender's account ID.")

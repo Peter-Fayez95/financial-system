@@ -22,6 +22,27 @@ class TransactionService:
                 account_id, currency, currency, amount
             )
             return transaction_id
+        
+    def withdraw(self, account_id, currency, amount):
+        if amount <= 0:
+            raise ValueError("Deposit amount can only hold a positive value.")
+        
+        account_id = get_account(conn, account_id)
+
+        if not account_id:
+            raise ValueError("Invalid account ID")
+        
+        balance_field = f"{currency.lower()}_balance"
+        if getattr(account_id, balance_field) < amount:
+            raise ValueError(f"Insufficient balance in {currency}")
+
+        with self.db_conn.connect() as conn:
+            update_balance(conn, account_id, currency, -amount)
+            transaction_id = create_transaction(
+                conn, account_id, "DepositMade", account_id, 
+                account_id, currency, currency, amount
+            )
+            return transaction_id
 
     def transfer(self, from_account_id, to_account_id, from_currency, to_currency, amount):
         with self.db_conn.connect() as conn:
@@ -34,7 +55,7 @@ class TransactionService:
             # Check sufficient balance
             balance_field = f"{from_currency.lower()}_balance"
             if getattr(from_account, balance_field) < amount:
-                raise ValueError("Insufficient funds")
+                raise ValueError(f"Insufficient balance in {from_currency}")
 
             # Get exchange rate if currencies differ
             if from_currency != to_currency:
