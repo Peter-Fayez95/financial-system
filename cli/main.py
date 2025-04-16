@@ -1,6 +1,7 @@
 import click
 from services.account_service import create_account
 from services.transaction_service import deposit, withdraw, convert_currency
+from services.currency_exchange_service import update_exchange_rate
 from decimal import Decimal
 
 VALID_CURRENCIES = {"USD", "EUR", "GBP"}
@@ -91,7 +92,7 @@ def transfer(from_account, to_account, from_currency, amount, to_currency):
 @click.option("--account-id", required=True, help="Account ID.")
 @click.option("--from-currency", required=True, callback=validate_currency, help="Currency to convert from.")
 @click.option("--amount", required=True, type=float, help="Amount to convert.")
-@click.option("--to-currency", required=False, callback=validate_currency,
+@click.option("--to-currency", required=True, callback=validate_currency,
               help="Currency to convert to (optional).")
 def convert_currency(account_id, from_currency, amount, to_currency):
     click.echo(f"[CONVERT CURRENCY] Account: {account_id}, {amount:.2f} {from_currency} to {to_currency or '[DEFAULT]'}")
@@ -105,6 +106,8 @@ def convert_currency(account_id, from_currency, amount, to_currency):
 @click.option("--rate", required=True, type=float, help="Exchange rate (e.g. 1.23).")
 def update_rate(from_currency, to_currency, rate):
     click.echo(f"[UPDATE RATE] {from_currency} → {to_currency} = {rate:.2f}")
+    update_exchange_rate(from_currency, to_currency, rate)
+    click.echo(f"Exchange rate updated between {from_currency} and {to_currency}")
 
 if __name__ == "__main__":
     cli()

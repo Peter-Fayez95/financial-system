@@ -8,14 +8,6 @@ def insert_exchange_rate(conn, from_currency: str, to_currency: str, rate: Decim
     Insert an exchange rate entry. Data should be validated through the previous layer.
     """
     cursor = conn.cursor()
-    
-    cursor.execute(
-        """
-        INSERT INTO CurrencyExchange (to_currency, from_currency, rate)
-        VALUES (?, ?, ?)
-        """,
-        (to_currency, from_currency, round(Decimal(1) / rate, 2))
-    )
 
     cursor.execute(
         """
