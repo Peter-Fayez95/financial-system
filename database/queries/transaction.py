@@ -1,7 +1,16 @@
 from models.transaction import Transaction
 from datetime import datetime
+from decimal import Decimal
 
-def create_transaction(conn, type, from_account, to_account, from_currency, to_currency, amount):
+def create_transaction(
+        conn, 
+        type: str, 
+        from_account: int, 
+        to_account: int, 
+        from_currency: str, 
+        to_currency: str, 
+        amount: Decimal
+    ):
     cursor = conn.cursor()
     timestamp = datetime.now().isoformat()
     cursor.execute(

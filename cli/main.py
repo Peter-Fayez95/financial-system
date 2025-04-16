@@ -1,4 +1,6 @@
 import click
+from services.account_service import create_account
+from decimal import Decimal
 
 VALID_CURRENCIES = {"USD", "EUR", "GBP"}
 
@@ -15,7 +17,7 @@ def parse_currency_list(ctx, param, value):
         if cur not in VALID_CURRENCIES:
             raise click.BadParameter(f"Invalid currency '{cur}'. Must be one of {', '.join(VALID_CURRENCIES)}")
         try:
-            currencies[cur] = float(amt)
+            currencies[cur] = Decimal(amt)
         except ValueError:
             raise click.BadParameter(f"Invalid amount for {cur}: {amt}")
     return currencies
@@ -40,11 +42,14 @@ def cli():
     pass
 
 @cli.command(help="Create a new account with optional ID and initial balances.")
-@click.option("--account-id", help="Optional account ID.")
 @click.option("--initial-balance", callback=parse_currency_list,
               help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=50).")
 def create_account(account_id, initial_balance):
-    click.echo(f"[CREATE ACCOUNT] ID: {account_id or '[AUTO]'}, Balances: {initial_balance}")
+    click.echo(f"[CREATE ACCOUNT], Balances: {initial_balance}")
+    currency_dict = parse_currency_list(initial_balance)
+    account_id = create_account(**currency_dict)
+    click.echo(f"Created account with ID: {account_id}.")
+
 
 @cli.command(help="Deposit currencies into an account.")
 @click.option("--account-id", required=True, help="Account ID to deposit into.")
@@ -52,6 +57,7 @@ def create_account(account_id, initial_balance):
               help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=20).")
 def deposit(account_id, currencies):
     click.echo(f"[DEPOSIT] Account: {account_id}, Currencies: {currencies}")
+    
 
 @cli.command(help="Withdraw currencies from an account.")
 @click.option("--account-id", required=True, help="Account ID to withdraw from.")
