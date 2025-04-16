@@ -20,4 +20,3 @@ class AccountService:
             account_id = create_account(conn, usd_balance, eur_balance, gbp_balance)
 
             return account_id
-

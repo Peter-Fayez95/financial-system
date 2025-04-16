@@ -1,5 +1,6 @@
 import click
 from services.account_service import create_account
+from services.transaction_service import deposit
 from decimal import Decimal
 
 VALID_CURRENCIES = {"USD", "EUR", "GBP"}
@@ -47,7 +48,7 @@ def cli():
 def create_account(account_id, initial_balance):
     click.echo(f"[CREATE ACCOUNT], Balances: {initial_balance}")
     currency_dict = parse_currency_list(initial_balance)
-    account_id = create_account(**currency_dict)
+    account_id = create_account(currency_dict)
     click.echo(f"Created account with ID: {account_id}.")
 
 
@@ -57,7 +58,8 @@ def create_account(account_id, initial_balance):
               help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=20).")
 def deposit(account_id, currencies):
     click.echo(f"[DEPOSIT] Account: {account_id}, Currencies: {currencies}")
-    
+    transaction_id = deposit(account_id, currencies)
+    click.echo(f"Deposited money into Account: {account_id}, Curriencies: {currencies}")
 
 @cli.command(help="Withdraw currencies from an account.")
 @click.option("--account-id", required=True, help="Account ID to withdraw from.")
