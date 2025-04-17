@@ -23,17 +23,14 @@ class TransactionService:
         return transaction_id
         
     def withdraw(self, account_id, currency, amount):
-        if amount <= 0:
-            return -1
-        
         account = get_account(self.db_conn, account_id)
 
         if not account:
-            return -2
+            return -1
         
         balance_field = f"{currency.lower()}_balance"
         if getattr(account, balance_field) < amount:
-            return -3
+            return -2
 
 
         update_balance(self.db_conn, account_id, currency, -amount)
@@ -44,9 +41,6 @@ class TransactionService:
         return transaction_id
 
     def transfer(self, from_account_id, to_account_id, from_currency, to_currency, amount):
-        if amount <= 0:
-            return -4
-        
         # Verify accounts exist
         from_account = get_account(self.db_conn, from_account_id)
         to_account = get_account(self.db_conn, to_account_id)
@@ -87,6 +81,14 @@ class TransactionService:
         
 
     def convert_currency(self, account_id, from_currency, to_currency, amount):
+        
+        if amount <= 0:
+            return -1
+        
+        account = get_account(self.db_conn, account_id)
+        
+        if not account:
+            return -2
         
         # Get exchange rate if currencies differ
         if from_currency != to_currency:

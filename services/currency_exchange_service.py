@@ -7,8 +7,6 @@ class CurrencyExchangeService:
     
 
     def update_exchange_rate(self, from_currency, to_currency, rate):
-        if rate <= 0:
-            raise ValueError("Exchange rate must be positive.")
         if from_currency == to_currency:
             return
         
