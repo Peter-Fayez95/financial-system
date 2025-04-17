@@ -10,10 +10,10 @@ class TransactionService:
         if amount <= 0:
             raise ValueError("Deposit amount can only hold a positive value.")
         
-        account_id = get_account(self.db_conn, account_id)
+        account = get_account(self.db_conn, account_id)
 
-        if not account_id:
-            raise ValueError("Invalid account ID")
+        if not account:
+            return -1
 
         update_balance(self.db_conn, account_id, currency, amount)
         transaction_id = create_transaction(
@@ -24,18 +24,19 @@ class TransactionService:
         
     def withdraw(self, account_id, currency, amount):
         if amount <= 0:
-            raise ValueError("Deposit amount can only hold a positive value.")
+            return -1
         
-        account_id = get_account(self.db_conn, account_id)
+        account = get_account(self.db_conn, account_id)
 
-        if not account_id:
-            raise ValueError("Invalid account ID")
+        if not account:
+            return -2
         
         balance_field = f"{currency.lower()}_balance"
-        if getattr(account_id, balance_field) < amount:
-            raise ValueError(f"Insufficient balance in {currency}")
+        if getattr(account, balance_field) < amount:
+            return -3
 
-        update_balance(conn, account_id, currency, -amount)
+
+        update_balance(self.db_conn, account_id, currency, -amount)
         transaction_id = create_transaction(
             self.db_conn, "WithdrawalMade", account_id, 
             account_id, currency, currency, amount
@@ -43,26 +44,33 @@ class TransactionService:
         return transaction_id
 
     def transfer(self, from_account_id, to_account_id, from_currency, to_currency, amount):
+        if amount <= 0:
+            return -4
         
         # Verify accounts exist
         from_account = get_account(self.db_conn, from_account_id)
         to_account = get_account(self.db_conn, to_account_id)
-        if not from_account or not to_account:
-            raise ValueError("Invalid account ID")
+
+        if not from_account:
+            return -1
+
+        if not to_account:
+            return -2
 
         # Check sufficient balance
         balance_field = f"{from_currency.lower()}_balance"
         if getattr(from_account, balance_field) < amount:
-            raise ValueError(f"Insufficient balance in {from_currency}")
+            return -3
 
         # Get exchange rate if currencies differ
-        if from_currency != to_currency:
+        if from_currency != to_currency and to_currency is not None:
             exchange = get_latest_rate(self.db_conn, from_currency, to_currency)
             if not exchange:
                 raise ValueError("No exchange rate available")
             to_amount = amount * exchange.rate
         else:
             to_amount = amount
+            to_currency = from_currency
 
         to_amount = round(to_amount, 2)
 

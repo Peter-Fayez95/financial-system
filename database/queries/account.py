@@ -37,7 +37,12 @@ def get_account(conn, account_id):
     (account_id,))
     row = cursor.fetchone()
     if row:
-        return row[0]
+        return Account(
+            id=row[0],
+            usd_balance=row[1],
+            eur_balance=row[2],
+            gbp_balance=row[3],
+        )
     return None
 
 def update_balance(conn, account_id, currency, amount):

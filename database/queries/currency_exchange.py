@@ -26,7 +26,7 @@ def get_latest_rate(conn, from_currency, to_currency):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT * 
-        FROM currency_exchange 
+        FROM CurrencyExchange 
         WHERE from_currency = %s AND to_currency = %s 
         ORDER BY timestamp DESC 
         LIMIT 1
@@ -48,7 +48,7 @@ def get_rate_at_time(conn, from_currency, to_currency, timestamp):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT * 
-        FROM currency_exchange 
+        FROM CurrencyExchange 
         WHERE from_currency = %s AND to_currency = %s AND timestamp >= %s
         ORDER BY timestamp
         LIMIT 1
