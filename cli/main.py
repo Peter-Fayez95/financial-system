@@ -20,8 +20,8 @@ Multi-Currency Financial Ledger CLI Tool
 
 Examples:
   cli.py create_account --initial-balance "USD=100,EUR=50"
-  cli.py deposit --account-id acc123 --currencies "GBP=200"
-  cli.py withdraw --account-id acc123 --currencies "EUR=25"
+  cli.py deposit --account-id acc123 --currency GBP --amount 200
+  cli.py withdraw --account-id acc123 --currency EUR --amount 25
   cli.py transfer --from-account acc1 --to-account acc2 --from-currency USD --amount 100
   cli.py convert_currency --account-id acc1 --from-currency EUR --amount 10 --to-currency GBP
   cli.py update_rate --from-currency USD --to-currency EUR --rate 1.10

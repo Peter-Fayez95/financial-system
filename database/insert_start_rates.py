@@ -5,7 +5,6 @@ from services.currency_exchange_service import CurrencyExchangeService
 
 
 def main():
-    # print(config.sections())
     config = get_database_parameters("database/database.ini")
     conn = DatabaseConnection(config['postgresql']).get_connection()
     currency_exchange_service = CurrencyExchangeService(conn)
