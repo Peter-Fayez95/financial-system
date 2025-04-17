@@ -18,5 +18,4 @@ class AccountService:
     
         with self.db_conn.connect() as conn:
             account_id = create_account(conn, usd_balance, eur_balance, gbp_balance)
-
             return account_id

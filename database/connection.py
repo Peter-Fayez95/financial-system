@@ -21,14 +21,15 @@ class DatabaseConnection:
             self._connection.close()
             self._connection = None
     
-    @contextmanager
+    # @contextmanager
     def get_connection(self):
         """Context manager to get a connection"""
         self.connect()
-        try:
-            yield self._connection
-        finally:
-            pass  # We'll keep the connection open for reuse
+        # try:
+        #     yield self._connection
+        # finally:
+        #     pass  # We'll keep the connection open for reuse
+        return self._connection
     
     @contextmanager
     def transaction(self):
@@ -40,15 +41,3 @@ class DatabaseConnection:
             except Exception:
                 conn.rollback()
                 raise
-
-# Singleton database connection instance
-db_connection = DatabaseConnection(
-    db_type=os.environ.get("DB_TYPE", "sqlite"),
-    connection_params={
-        "host": os.environ.get("DB_HOST"),
-        "user": os.environ.get("DB_USER"),
-        "password": os.environ.get("DB_PASS"),
-        "dbname": os.environ.get("DB_NAME"),
-        "port": os.environ.get("DB_PORT", 5432),
-    }
-)
