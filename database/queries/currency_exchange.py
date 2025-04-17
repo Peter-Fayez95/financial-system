@@ -12,7 +12,7 @@ def insert_exchange_rate(conn, from_currency: str, to_currency: str, rate: Decim
     cursor.execute(
         """
         INSERT INTO CurrencyExchange (from_currency, to_currency, rate)
-        VALUES (%s, %s, %s, %s)
+        VALUES (%s, %s, %s)
         RETURNING exchange_id;
         """,
         (from_currency, to_currency, rate)
