@@ -1,16 +1,25 @@
 import click
-from services.account_service import create_account
-from services.transaction_service import deposit, withdraw, convert_currency
-from services.currency_exchange_service import update_exchange_rate
+from services.account_service import AccountService
+from services.transaction_service import TransactionService
+from services.currency_exchange_service import CurrencyExchangeService
+from database.connection import DatabaseConnection
+from database.connection_parameters import get_database_parameters
+from collections import defaultdict
 from decimal import Decimal
 
 VALID_CURRENCIES = {"USD", "EUR", "GBP"}
 
+cfg = get_database_parameters("database/database.ini")
+db_conn = DatabaseConnection(cfg['postgresql']).get_connection()
+account_service = AccountService(db_conn)
+transaction_service = TransactionService(db_conn)
+currency_service = CurrencyExchangeService(db_conn)
+
 def parse_currency_list(ctx, param, value):
     """Parses comma-separated CUR=AMT entries into a dict with currency validation."""
     if not value:
-        return {}
-    currencies = {}
+        return defaultdict(Decimal)
+    currencies = defaultdict(Decimal)
     for pair in value.split(","):
         if "=" not in pair:
             raise click.BadParameter(f"Invalid format: '{pair}', expected CUR=AMT")
@@ -46,28 +55,29 @@ def cli():
 @cli.command(help="Create a new account with optional ID and initial balances.")
 @click.option("--initial-balance", callback=parse_currency_list,
               help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=50).")
-def create_account(account_id, initial_balance):
+def create_account(initial_balance):
     click.echo(f"[CREATE ACCOUNT], Balances: {initial_balance}")
-    account_id = create_account(**initial_balance)
+    # print(**initial_balance)
+    account_id = account_service.create_account(initial_balance)
     click.echo(f"Created account with ID: {account_id}.")
 
 
 @cli.command(help="Deposit currencies into an account.")
 @click.option("--account-id", required=True, help="Account ID to deposit into.")
-@click.option("--currency", required=True, help="Currency")
+@click.option("--currency", required=True, help="Currency", callback=validate_currency)
 @click.option("--amount", required=True, help="Amount to be deposited")
 def deposit(account_id, currency, amount):
-    click.echo(f"[DEPOSIT] Account: {account_id}, Currency: {currency}")
-    transaction_id = deposit(account_id, currency, amount)
+    click.echo(f"[DEPOSIT] Account: {account_id}, Currency: {currency}, Amount: {amount}")
+    transaction_id = transaction_service.deposit(account_id, currency, Decimal(amount))
     click.echo(f"Deposited money into Account: {account_id}, Currency: {currency}, Amount: {amount}")
 
 @cli.command(help="Withdraw currencies from an account.")
 @click.option("--account-id", required=True, help="Account ID to withdraw from.")
-@click.option("--currency", required=True, help="Currency")
+@click.option("--currency", required=True, help="Currency", callback=validate_currency)
 @click.option("--amount", required=True, help="Amount to be withdrawn.")
 def withdraw(account_id, currency, amount):
     click.echo(f"[WITHDRAW] Account: {account_id}, Currency: {currency}")
-    transaction_id = withdraw(account_id, currency, amount)
+    transaction_id = transaction_service.withdraw(account_id, currency, Decimal(amount))
     click.echo(f"Withdrawn money from Account: {account_id}, Currency: {currency}, Amount: {amount}")
 
 @cli.command(help="Transfer money between accounts (same or different currencies).")
@@ -80,7 +90,7 @@ def withdraw(account_id, currency, amount):
 def transfer(from_account, to_account, from_currency, amount, to_currency):
     click.echo(f"[TRANSFER] {amount:.2f} {from_currency} from {from_account} to {to_account}" +
                (f" as {to_currency}" if to_currency else ""))
-    transaction_id = transfer(from_account, to_account, from_currency, to_currency, amount)
+    transaction_id = transaction_service.transfer(from_account, to_account, from_currency, to_currency, Decimal(amount))
     click.echo(f"Transferred money from Account: {from_account}, To Account: {to_account}")
     if to_currency != from_currency:
         click.echo(f"Converted Amount: {amount} in {from_currency} To {to_currency}")
@@ -96,7 +106,7 @@ def transfer(from_account, to_account, from_currency, amount, to_currency):
               help="Currency to convert to (optional).")
 def convert_currency(account_id, from_currency, amount, to_currency):
     click.echo(f"[CONVERT CURRENCY] Account: {account_id}, {amount:.2f} {from_currency} to {to_currency or '[DEFAULT]'}")
-    transaction_id = convert_currency(account_id, from_currency, to_currency, amount)
+    transaction_id = transaction_service.convert_currency(account_id, from_currency, to_currency, Decimal(amount))
     click.echo(f"Converted {amount} in {from_currency} to {to_currency}")
 
 
@@ -106,7 +116,7 @@ def convert_currency(account_id, from_currency, amount, to_currency):
 @click.option("--rate", required=True, type=float, help="Exchange rate (e.g. 1.23).")
 def update_rate(from_currency, to_currency, rate):
     click.echo(f"[UPDATE RATE] {from_currency} → {to_currency} = {rate:.2f}")
-    update_exchange_rate(from_currency, to_currency, rate)
+    currency_service.update_exchange_rate(from_currency, to_currency, Decimal(rate))
     click.echo(f"Exchange rate updated between {from_currency} and {to_currency}")
 
 if __name__ == "__main__":

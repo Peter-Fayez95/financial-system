@@ -6,7 +6,12 @@ class AccountService:
     def __init__(self, db_conn):
         self.db_conn = db_conn
 
-    def create_account(self, usd_balance: Decimal, eur_balance: Decimal, gbp_balance: Decimal):
+    def create_account(self, currency_dict):
+
+        usd_balance = currency_dict['USD']
+        eur_balance = currency_dict['EUR']
+        gbp_balance = currency_dict['GBP']
+
 
         for balance in [usd_balance, eur_balance, gbp_balance]:
             if balance < 0:
@@ -16,6 +21,5 @@ class AccountService:
         eur_balance = round(eur_balance, 2)
         gbp_balance = round(gbp_balance, 2)
     
-        with self.db_conn.connect() as conn:
-            account_id = create_account(conn, usd_balance, eur_balance, gbp_balance)
-            return account_id
+        account_id = create_account(self.db_conn, usd_balance, eur_balance, gbp_balance)
+        return account_id

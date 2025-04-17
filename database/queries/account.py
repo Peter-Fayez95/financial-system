@@ -15,14 +15,15 @@ def create_account(
     cursor.execute(
         """
         INSERT INTO account (usd_balance, eur_balance, gbp_balance) 
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
+        RETURNING account_id;
         """,
         (usd_balance, eur_balance, gbp_balance)
     )
 
     conn.commit()
 
-    return cursor.lastrowid
+    return cursor.fetchone()[0]
 
 
 def get_account(conn, account_id):
@@ -31,17 +32,12 @@ def get_account(conn, account_id):
     """
     SELECT * 
     FROM account 
-    WHERE id = ?
+    WHERE account_id = %s
     """, 
     (account_id,))
     row = cursor.fetchone()
     if row:
-        return Account(
-            id=row['account_id'],
-            usd_balance=row['usd_balance'],
-            eur_balance=row['eur_balance'],
-            gbp_balance=row['gbp_balance']
-        )
+        return row[0]
     return None
 
 def update_balance(conn, account_id, currency, amount):
@@ -55,8 +51,8 @@ def update_balance(conn, account_id, currency, amount):
     }
     field = field_map[currency]
     cursor = conn.cursor()
+
     cursor.execute(
-        f"UPDATE account SET ? = ? + ? WHERE id = ?",
-        (field, field, amount, account_id)
+        f"UPDATE account SET {field} = {field} + {amount} WHERE account_id = {account_id}"
     )
     conn.commit()

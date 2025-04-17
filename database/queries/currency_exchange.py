@@ -12,21 +12,22 @@ def insert_exchange_rate(conn, from_currency: str, to_currency: str, rate: Decim
     cursor.execute(
         """
         INSERT INTO CurrencyExchange (from_currency, to_currency, rate)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
+        RETURNING exchange_id;
         """,
         (from_currency, to_currency, rate)
     )
 
     conn.commit()
 
-    return cursor.lastrowid
+    return cursor.fetchone()[0]
 
 def get_latest_rate(conn, from_currency, to_currency):
     cursor = conn.cursor()
     cursor.execute("""
         SELECT * 
         FROM currency_exchange 
-        WHERE from_currency = ? AND to_currency = ? 
+        WHERE from_currency = %s AND to_currency = %s 
         ORDER BY timestamp DESC 
         LIMIT 1
         """,
@@ -48,7 +49,7 @@ def get_rate_at_time(conn, from_currency, to_currency, timestamp):
     cursor.execute("""
         SELECT * 
         FROM currency_exchange 
-        WHERE from_currency = ? AND to_currency = ? AND timestamp >= ?
+        WHERE from_currency = %s AND to_currency = %s AND timestamp >= %s
         ORDER BY timestamp
         LIMIT 1
         """,

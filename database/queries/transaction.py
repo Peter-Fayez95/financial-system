@@ -16,12 +16,13 @@ def create_transaction(
     cursor.execute(
         """
         INSERT INTO transaction (type, from_account, to_account, timestamp, from_currency, to_currency, amount)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        RETURNING transaction_id;
         """,
         (type, from_account, to_account, timestamp, from_currency, to_currency, amount)
     )
     conn.commit()
-    return cursor.lastrowid
+    return cursor.fetchone()[0]
 
 def get_transactions_by_account(conn, account_id):
     cursor = conn.cursor()
@@ -29,7 +30,7 @@ def get_transactions_by_account(conn, account_id):
         """
         SELECT * 
         FROM transaction 
-        WHERE from_account = ? OR to_account = ? 
+        WHERE from_account = %s OR to_account = %s 
         ORDER BY timestamp DESC
         """,
         (account_id, account_id)

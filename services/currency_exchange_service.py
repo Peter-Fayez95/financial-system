@@ -11,6 +11,6 @@ class CurrencyExchangeService:
             raise ValueError("Exchange rate must be positive.")
         if from_currency == to_currency:
             return
-        with self.db_conn.connect() as conn:
-            insert_exchange_rate(conn, from_currency, to_currency, rate)
-            insert_exchange_rate(conn, to_currency, from_currency, round(Decimal(1 / rate), 2))
+        
+        insert_exchange_rate(self.db_conn, from_currency, to_currency, rate)
+        insert_exchange_rate(self.db_conn, to_currency, from_currency, round(Decimal(1 / rate), 2))

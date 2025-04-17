@@ -1,5 +1,5 @@
 from connection import DatabaseConnection
-import configparser
+from connection_parameters import get_database_parameters
 
 def create_tables(conn) -> None:
     """
@@ -47,9 +47,8 @@ def create_tables(conn) -> None:
 
 
 def main():
-    config = configparser.ConfigParser()
-    config.read("database/database.ini")
     # print(config.sections())
+    config = get_database_parameters("database/database.ini")
     conn = DatabaseConnection(config['postgresql']).get_connection()
     create_tables(conn)
 
