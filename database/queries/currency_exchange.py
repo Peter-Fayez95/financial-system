@@ -37,7 +37,7 @@ def get_latest_rate(conn, from_currency, to_currency):
     if row:
         return CurrencyExchange(
             id=row[0],
-            timestamp=datetime.fromisoformat(row[1]),
+            timestamp=row[1],
             from_currency=row[2],
             to_currency=row[3],
             rate=row[4]
@@ -60,7 +60,7 @@ def get_rate_at_time(conn, from_currency, to_currency, timestamp):
     if row:
         return CurrencyExchange(
             id=row[0],
-            timestamp=datetime.fromisoformat(row[1]),
+            timestamp=row[1],
             from_currency=row[2],
             to_currency=row[3],
             rate=row[4]

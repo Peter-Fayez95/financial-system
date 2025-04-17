@@ -41,7 +41,7 @@ def get_transactions_by_account(conn, account_id):
             type=row['type'],
             from_account=row['from_account'],
             to_account=row['to_account'],
-            timestamp=datetime.fromisoformat(row['timestamp']),
+            timestamp=row['timestamp'],
             from_currency=row['from_currency'],
             to_currency=row['to_currency'],
             amount=row['amount']
