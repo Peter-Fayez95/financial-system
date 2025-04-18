@@ -132,13 +132,17 @@ def update_rate(from_currency, to_currency, rate):
 @cli.command(help="Get transaction history for an account. A default limit of the 5 most recent transactions.")
 @click.option("--account-id", required=True, type=click.INT, help="Account ID.")
 @click.option("--limit", type=click.INT, required=False, help="Limit the number of transactions returned.")
-def get_transactions(account_id, limit):
+@click.option("--type", required=False, 
+              type=click.Choice(['DepositMade', 'WithdrawalMade', 
+                                 'MoneyTransferred', 'CurrencyConverted']), 
+                                 help="Type of the transactions returned.")
+def get_transactions(account_id, limit, type):
     click.echo(f"[TRANSACTION HISTORY] Account ID: {account_id}" + (f", Limit: {limit}" if limit else ""))
     
-    message = transaction_service.get_transaction_history_for_account(account_id, limit)
+    message = transaction_service.get_transaction_history_for_account(account_id, limit, type)
 
     if not message:
-        click.echo("No transactions found for this account.")
+        click.echo(f"No transactions {f'of type {type}' if type else ''} found for this account.")
         return
 
     click.echo(message)

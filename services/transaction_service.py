@@ -2,11 +2,13 @@ from database.queries.account import get_account, update_balance
 from database.queries.currency_exchange import get_latest_rate
 from database.queries.transaction import create_transaction, get_transaction_history_for_account
 from .snapshot_service import SnapshotService
+from .currency_exchange_service import CurrencyExchangeService # Added import
 
 class TransactionService:
     def __init__(self, db_conn):
         self.db_conn = db_conn
         self.snapshot_service = SnapshotService(self.db_conn)
+        self.currency_exchange_service = CurrencyExchangeService(self.db_conn) # Instantiate CurrencyExchangeService
 
     def deposit(self, account_id, currency, amount):
         if amount <= 0:
@@ -120,8 +122,8 @@ class TransactionService:
         return transaction_id
     
 
-    def get_transaction_history_for_account(self, account_id, limit = 5):
-        transactions = get_transaction_history_for_account(self.db_conn, account_id, limit)
+    def get_transaction_history_for_account(self, account_id, limit = 5, type=None):
+        transactions = get_transaction_history_for_account(self.db_conn, account_id, limit, type)
 
         if not transactions:
             return ""
@@ -130,16 +132,24 @@ class TransactionService:
 
         for tx in transactions:
             details = f"Type: {tx.type}, Time: {tx.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
-            if tx.type in ['DepositMade', 'WithdrawalMade', 'CurrencyConverted']:
+            if tx.type in ['DepositMade', 'WithdrawalMade']:
                 details += f", Curr: {tx.from_currency if tx.type != 'DepositMade' else tx.to_currency}"
                 details += f", Amt: {tx.amount}"
-                if tx.type == 'CurrencyConverted':
-                    details += f", To Curr: {tx.to_currency}"
+            elif tx.type == 'CurrencyConverted':
+                details += f", From Curr: {tx.from_currency}, Amt: {tx.amount}, To Curr: {tx.to_currency}"
+                if tx.from_currency != tx.to_currency:
+                    rate = self.currency_exchange_service.get_rate_at_time(tx.from_currency, tx.to_currency, tx.timestamp)
+                    details += f", Rate: {rate}"
             elif tx.type == 'MoneyTransferred':
                 details += f", From: {tx.from_account}, To: {tx.to_account}"
                 details += f", From Curr: {tx.from_currency}, Amt: {tx.amount}"
-                if tx.to_currency:
+                if tx.to_currency and tx.from_currency != tx.to_currency:
                     details += f", To Curr: {tx.to_currency}"
+                    rate = self.currency_exchange_service.get_rate_at_time(tx.from_currency, tx.to_currency, tx.timestamp)
+                    details += f", Rate: {rate}"
+                elif tx.to_currency: # Handle same currency transfer case where to_currency might be set
+                     details += f", To Curr: {tx.to_currency}"
+
             messages.append(details)
         
         return "\n".join(messages)

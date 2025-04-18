@@ -61,15 +61,20 @@ def count_transactions_for_account(conn, account_id):
     row = cursor.fetchone()
     return row[0]
 
-def get_transaction_history_for_account(conn, account_id, limit=None):
+def get_transaction_history_for_account(conn, account_id, limit=None, type=None):
     cursor = conn.cursor()
     query = """
         SELECT * 
         FROM transaction 
-        WHERE from_account = %s OR to_account = %s
-        ORDER BY timestamp DESC
+        WHERE (from_account = %s OR to_account = %s)
     """
     params = (account_id, account_id)
+
+    if type is not None:
+        query += " AND type = %s "
+        params += (type,)
+
+    query += " ORDER BY timestamp DESC"
 
     if limit is not None:
         query += " LIMIT %s"
