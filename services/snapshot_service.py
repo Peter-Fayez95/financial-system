@@ -10,7 +10,7 @@ class SnapshotService:
     def handle_snapshots(self, account_id):
         account = get_account(self.db_conn, account_id)
 
-        if count_transactions_for_account(self.db_conn, account_id) % 50 == 0:
+        if count_transactions_for_account(self.db_conn, account_id) % 5 == 0:
             create_snapshot(self.db_conn, 
                             account_id, 
                             account.usd_balance, 

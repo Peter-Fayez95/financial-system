@@ -1,5 +1,5 @@
 from database.queries.snapshots import get_snapshot_at_time
-from database.queries.transaction import get_transactions_after_time
+from database.queries.transaction import get_transactions_in_interval
 from database.queries.currency_exchange import get_rate_at_time
 from decimal import Decimal
 
@@ -7,7 +7,7 @@ class ReconstructionService:
     def __init__(self, db_conn):
         self.db_conn = db_conn
 
-    def update_snapshot(snapshot, currency, amount):
+    def update_snapshot(self, snapshot, currency, amount):
         if currency == 'USD':
             snapshot.usd_balance += amount
         elif currency == 'EUR':
@@ -19,7 +19,9 @@ class ReconstructionService:
         """Reconstruct Account state at the given timestamp"""
 
         latest_snapshot = get_snapshot_at_time(self.db_conn, account_id, timestamp)
-        transactions_after_snapshot = get_transactions_after_time(self.db_conn, account_id, latest_snapshot.timestamp)
+        if latest_snapshot is None:
+            return None
+        transactions_after_snapshot = get_transactions_in_interval(self.db_conn, account_id, latest_snapshot.timestamp, timestamp)
         
 
         for transaction in transactions_after_snapshot:

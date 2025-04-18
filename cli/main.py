@@ -2,9 +2,13 @@ import click
 from services.account_service import AccountService
 from services.transaction_service import TransactionService
 from services.currency_exchange_service import CurrencyExchangeService
+# Add ReconstructionService import
+from services.reconstruction_service import ReconstructionService
 from database.connection import DatabaseConnection
 from database.connection_parameters import *
 from decimal import Decimal
+# Add datetime import for type hinting if needed, click handles parsing
+from datetime import datetime
 from .validation import *
 
 
@@ -13,6 +17,8 @@ db_conn = DatabaseConnection(cfg['postgresql']).get_connection()
 account_service = AccountService(db_conn)
 transaction_service = TransactionService(db_conn)
 currency_service = CurrencyExchangeService(db_conn)
+# Instantiate ReconstructionService
+reconstruction_service = ReconstructionService(db_conn)
 
 
 @click.group(help="""
@@ -25,6 +31,8 @@ Examples:
   cli.py transfer --from-account acc1 --to-account acc2 --from-currency USD --amount 100
   cli.py convert-currency --account-id acc1 --from-currency EUR --amount 10 --to-currency GBP
   cli.py update_rate --from-currency USD --to-currency EUR --rate 1.10
+  cli.py get-balance --account-id acc123
+  cli.py get-balance --account-id acc123 --timestamp "2023-10-27 10:00:00"
 """)
 def cli():
     pass
@@ -96,7 +104,7 @@ def transfer(from_account, to_account, from_currency, amount, to_currency):
     
 
 @cli.command(help="Convert currency within a single account.")
-@click.option("--account-id", required=True, help="Account ID.")
+@click.option("--account-id", required=True, help="Account ID.", type=click.INT)
 @click.option("--from-currency", required=True, callback=validate_currency, help="Currency to convert from.")
 @click.option("--amount", required=True, type=float, help="Amount to convert.", callback=validate_amount)
 @click.option("--to-currency", required=True, callback=validate_currency,
@@ -125,15 +133,38 @@ def update_rate(from_currency, to_currency, rate):
     click.echo(f"Exchange rate updated between {from_currency} and {to_currency}")
 
 
-@cli.command(help="Get Account balance")
+@cli.command(help="Get Account balance, optionally at a specific timestamp.")
 @click.option("--account-id", required=True, help="Account ID")
-def get_balance(account_id):
-    click.echo(f"[ACCOUNT BALANCE] ID: {account_id}")
-    usd_balance, eur_balance, gbp_balance = account_service.get_balance(account_id)
-    message = f"ID: {account_id} | Balance: {usd_balance} USD, {eur_balance} EUR, {gbp_balance} GBP"
-
-    if usd_balance < 0:
-        message = "Invalid account ID"
+# Add optional timestamp argument
+@click.option("--timestamp", type=click.DateTime(), required=False,
+              help="Get balance at a specific point in time (e.g., 'YYYY-MM-DD HH:MM:SS').")
+def get_balance(account_id, timestamp):
+    if timestamp:
+        click.echo(f"[ACCOUNT BALANCE @ {timestamp}] ID: {account_id}")
+        # Use reconstruction service
+        snapshot = reconstruction_service.reconstruct_state(account_id, timestamp)
+        if snapshot:
+            usd_balance = snapshot.usd_balance
+            eur_balance = snapshot.eur_balance
+            gbp_balance = snapshot.gbp_balance
+            # Check if the account existed at that time (balances might be 0)
+            # Assuming reconstruction returns None or raises error for non-existent accounts at that time
+            # or returns a snapshot with potentially zero balances if created later.
+            # We'll rely on the snapshot object being valid if returned.
+            message = f"ID: {account_id} @ {timestamp} | Balance: {usd_balance} USD, {eur_balance} EUR, {gbp_balance} GBP"
+        else:
+            # Handle cases where reconstruction failed (e.g., account didn't exist yet, no snapshots found)
+            message = f"Could not reconstruct balance for Account ID: {account_id} at {timestamp}. Account might not have existed or no history available."
+            # Set a sentinel value to indicate failure like the original logic, if needed downstream
+            usd_balance = -1 
+    else:
+        click.echo(f"[CURRENT ACCOUNT BALANCE] ID: {account_id}")
+        # Use account service for current balance (existing logic)
+        usd_balance, eur_balance, gbp_balance = account_service.get_balance(account_id)
+        if usd_balance < 0: # Existing check for invalid account ID
+             message = "Invalid account ID"
+        else:
+             message = f"ID: {account_id} | Balance: {usd_balance} USD, {eur_balance} EUR, {gbp_balance} GBP"
 
     click.echo(message)
 
