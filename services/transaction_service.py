@@ -1,6 +1,6 @@
 from database.queries.account import get_account, update_balance
 from database.queries.currency_exchange import get_latest_rate
-from database.queries.transaction import create_transaction
+from database.queries.transaction import create_transaction, get_transaction_history_for_account
 from .snapshot_service import SnapshotService
 
 class TransactionService:
@@ -118,3 +118,28 @@ class TransactionService:
         )
         self.snapshot_service.handle_snapshots(account_id)
         return transaction_id
+    
+
+    def get_transaction_history_for_account(self, account_id, limit = 5):
+        transactions = get_transaction_history_for_account(self.db_conn, account_id, limit)
+
+        if not transactions:
+            return ""
+        
+        messages = []
+
+        for tx in transactions:
+            details = f"Type: {tx.type}, Time: {tx.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            if tx.type in ['DepositMade', 'WithdrawalMade', 'CurrencyConverted']:
+                details += f", Curr: {tx.from_currency if tx.type != 'DepositMade' else tx.to_currency}"
+                details += f", Amt: {tx.amount}"
+                if tx.type == 'CurrencyConverted':
+                    details += f", To Curr: {tx.to_currency}"
+            elif tx.type == 'MoneyTransferred':
+                details += f", From: {tx.from_account}, To: {tx.to_account}"
+                details += f", From Curr: {tx.from_currency}, Amt: {tx.amount}"
+                if tx.to_currency:
+                    details += f", To Curr: {tx.to_currency}"
+            messages.append(details)
+        
+        return "\n".join(messages)

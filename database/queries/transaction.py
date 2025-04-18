@@ -60,3 +60,33 @@ def count_transactions_for_account(conn, account_id):
     )
     row = cursor.fetchone()
     return row[0]
+
+def get_transaction_history_for_account(conn, account_id, limit=None):
+    cursor = conn.cursor()
+    query = """
+        SELECT * 
+        FROM transaction 
+        WHERE from_account = %s OR to_account = %s
+        ORDER BY timestamp DESC
+    """
+    params = (account_id, account_id)
+
+    if limit is not None:
+        query += " LIMIT %s"
+        params += (limit,)
+
+    cursor.execute(query, params)
+    
+    return [
+        Transaction(
+            id=row[0],
+            type=row[1],
+            from_account=row[2],
+            to_account=row[3],
+            timestamp=row[4],
+            from_currency=row[5],
+            to_currency=row[6],
+            amount=row[7]
+        )
+        for row in cursor.fetchall()
+    ]
