@@ -124,5 +124,18 @@ def update_rate(from_currency, to_currency, rate):
     currency_service.update_exchange_rate(from_currency, to_currency, rate)
     click.echo(f"Exchange rate updated between {from_currency} and {to_currency}")
 
+
+@cli.command(help="Get Account balance")
+@click.option("--account-id", required=True, help="Account ID")
+def get_balance(account_id):
+    click.echo(f"[ACCOUNT BALANCE] ID: {account_id}")
+    usd_balance, eur_balance, gbp_balance = account_service.get_balance(account_id)
+    message = f"ID: {account_id} | Balance: {usd_balance} USD, {eur_balance} EUR, {gbp_balance} GBP"
+
+    if usd_balance < 0:
+        message = "Invalid account ID"
+
+    click.echo(message)
+
 if __name__ == "__main__":
     cli()

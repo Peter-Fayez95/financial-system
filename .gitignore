@@ -2,4 +2,4 @@
 venv
 !requirements.txt
 database/*.ini
-*/__pycache__
+**/__pycache__/

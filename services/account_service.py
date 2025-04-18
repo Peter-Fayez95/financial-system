@@ -1,5 +1,5 @@
 from decimal import Decimal
-from database.queries.account import create_account
+from database.queries.account import create_account, get_account
 from .snapshot_service import SnapshotService
 
 class AccountService:
@@ -25,3 +25,12 @@ class AccountService:
         account_id = create_account(self.db_conn, usd_balance, eur_balance, gbp_balance)
         self.snapshot_service.handle_snapshots(account_id)
         return account_id
+    
+
+    def get_balance(self, account_id):
+        account = get_account(self.db_conn, account_id)
+
+        if account is None:
+            return -1, -1, -1
+        
+        return account.usd_balance, account.eur_balance, account.gbp_balance
