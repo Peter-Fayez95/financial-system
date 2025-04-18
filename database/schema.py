@@ -40,7 +40,16 @@ def create_tables(conn) -> None:
             to_currency VARCHAR(3),
             amount NUMERIC NOT NULL
         );           
-                   
+
+        -- Snapshots Table
+        CREATE TABLE Snapshots (
+            snapshot_id SERIAL PRIMARY KEY,
+            account_id INTEGER REFERENCES Account(account_id) NOT NULL,
+            timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+            usd_balance NUMERIC NOT NULL DEFAULT 0,
+            eur_balance NUMERIC NOT NULL DEFAULT 0,
+            gbp_balance NUMERIC NOT NULL DEFAULT 0
+        );
     """)
 
     conn.commit()
