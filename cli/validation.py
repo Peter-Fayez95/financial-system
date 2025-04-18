@@ -30,12 +30,12 @@ def validate_currency(ctx, param, value):
 
 
 def validate_amount(ctx, param, value):
-    if value <= 0:
+    if Decimal(value) <= 0:
         raise click.BadParameter(f"The amount must be positive. You provided: {value}")
-    return round(value, 2)
+    return round(Decimal(value), 2)
 
 
 def validate_rate(ctx, param, value):
-    if value <= 0:
+    if Decimal(value) <= 0:
         raise click.BadParameter(f"The rate must be positive. You provided: {value}")
-    return round(value, 2)
+    return round(Decimal(value), 2)
