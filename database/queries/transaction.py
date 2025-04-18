@@ -24,16 +24,16 @@ def create_transaction(
     conn.commit()
     return cursor.fetchone()[0]
 
-def get_transactions_by_account(conn, account_id):
+def get_transactions_after_time(conn, account_id, timestamp):
     cursor = conn.cursor()
     cursor.execute(
         """
         SELECT * 
         FROM transaction 
-        WHERE from_account = %s OR to_account = %s 
-        ORDER BY timestamp DESC;
+        WHERE (from_account = %s OR to_account = %s) AND timestamp >= %s 
+        ORDER BY timestamp;
         """,
-        (account_id, account_id)
+        (account_id, account_id, timestamp)
     )
     return [
         Transaction(

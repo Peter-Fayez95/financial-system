@@ -54,8 +54,8 @@ def get_snapshot_at_time(conn, account_id, timestamp):
         """
         SELECT * 
         FROM snapshot
-        WHERE account_id = %s AND timestamp >= %s;
-        ORDER BY timestamp
+        WHERE account_id = %s AND timestamp <= %s;
+        ORDER BY timestamp DESC
         LIMIT 1;
         """,
         (account_id, timestamp)
