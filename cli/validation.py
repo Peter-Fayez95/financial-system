@@ -23,12 +23,6 @@ def parse_currency_list(ctx, param, value):
     return currencies
 
 
-def validate_currency(ctx, param, value):
-    if value and value.upper() not in VALID_CURRENCIES:
-        raise click.BadParameter(f"Currency must be one of: {', '.join(VALID_CURRENCIES)}")
-    return value.upper() if value else None
-
-
 def validate_amount(ctx, param, value):
     if Decimal(value) <= 0:
         raise click.BadParameter(f"The amount must be positive. You provided: {value}")
