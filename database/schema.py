@@ -9,7 +9,7 @@ def create_tables(conn) -> None:
 
     cursor.execute("""
         -- Account Table
-        CREATE TABLE Account (
+        CREATE TABLE IF NOT EXISTS Account (
             account_id SERIAL PRIMARY KEY,
             usd_balance NUMERIC NOT NULL DEFAULT 0,
             eur_balance NUMERIC NOT NULL DEFAULT 0,
@@ -17,7 +17,7 @@ def create_tables(conn) -> None:
         );
 
         -- CurrencyExchange Table
-        CREATE TABLE CurrencyExchange (
+        CREATE TABLE IF NOT EXISTS CurrencyExchange (
             exchange_id SERIAL PRIMARY KEY,
             timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
             from_currency VARCHAR(3) NOT NULL,
@@ -26,11 +26,15 @@ def create_tables(conn) -> None:
         );
                    
         -- Create enum type
-        CREATE TYPE transaction_type
-        AS ENUM ('DepositMade', 'WithdrawalMade', 'MoneyTransferred', 'CurrencyConverted');
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+                CREATE TYPE transaction_type AS ENUM ('DepositMade', 'WithdrawalMade', 'MoneyTransferred', 'CurrencyConverted');
+            END IF;
+        END $$;
 
         -- Transaction Table
-        CREATE TABLE Transaction (
+        CREATE TABLE IF NOT EXISTS Transaction (
             transaction_id SERIAL PRIMARY KEY,
             type transaction_type NOT NULL,
             from_account INTEGER REFERENCES Account(account_id) NOT NULL,
@@ -42,7 +46,7 @@ def create_tables(conn) -> None:
         );           
 
         -- Snapshots Table
-        CREATE TABLE Snapshot (
+        CREATE TABLE IF NOT EXISTS Snapshot (
             snapshot_id SERIAL PRIMARY KEY,
             account_id INTEGER REFERENCES Account(account_id) NOT NULL,
             timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
