@@ -42,7 +42,7 @@ def create_tables(conn) -> None:
         );           
 
         -- Snapshots Table
-        CREATE TABLE Snapshots (
+        CREATE TABLE Snapshot (
             snapshot_id SERIAL PRIMARY KEY,
             account_id INTEGER REFERENCES Account(account_id) NOT NULL,
             timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
