@@ -12,7 +12,7 @@ def create_snapshot(
 
     cursor.execute(
         """
-        INSERT INTO snapshot (accound_id, usd_balance, eur_balance, gbp_balance) 
+        INSERT INTO snapshot (account_id, usd_balance, eur_balance, gbp_balance) 
         VALUES (%s, %s, %s, %s)
         RETURNING account_id;
         """,

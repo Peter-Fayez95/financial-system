@@ -1,7 +1,7 @@
 from database.queries.account import get_account, update_balance
 from database.queries.currency_exchange import get_latest_rate
 from database.queries.transaction import create_transaction
-from snapshot_service import SnapshotService
+from .snapshot_service import SnapshotService
 
 class TransactionService:
     def __init__(self, db_conn):

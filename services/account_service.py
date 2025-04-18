@@ -1,6 +1,6 @@
 from decimal import Decimal
 from database.queries.account import create_account
-from snapshot_service import SnapshotService
+from .snapshot_service import SnapshotService
 
 class AccountService:
     def __init__(self, db_conn):
