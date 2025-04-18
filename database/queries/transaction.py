@@ -31,7 +31,7 @@ def get_transactions_by_account(conn, account_id):
         SELECT * 
         FROM transaction 
         WHERE from_account = %s OR to_account = %s 
-        ORDER BY timestamp DESC
+        ORDER BY timestamp DESC;
         """,
         (account_id, account_id)
     )
@@ -48,3 +48,16 @@ def get_transactions_by_account(conn, account_id):
         )
         for row in cursor.fetchall()
     ]
+
+def count_transactions_for_account(conn, account_id):
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT COUNT(*) 
+        FROM transaction 
+        WHERE from_account = %s OR to_account = %s;
+        """,
+        (account_id, account_id)
+    )
+    row = cursor.fetchone()
+    return row[0]

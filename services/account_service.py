@@ -1,10 +1,11 @@
 from decimal import Decimal
 from database.queries.account import create_account
-from database.queries.transaction import create_transaction
+from snapshot_service import SnapshotService
 
 class AccountService:
     def __init__(self, db_conn):
         self.db_conn = db_conn
+        self.snapshot_service = SnapshotService(self.db_conn)
 
     def create_account(self, currency_dict):
 
@@ -22,4 +23,5 @@ class AccountService:
         gbp_balance = round(gbp_balance, 2)
     
         account_id = create_account(self.db_conn, usd_balance, eur_balance, gbp_balance)
+        self.snapshot_service.handle_snapshots(account_id)
         return account_id

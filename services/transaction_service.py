@@ -1,10 +1,12 @@
 from database.queries.account import get_account, update_balance
 from database.queries.currency_exchange import get_latest_rate
 from database.queries.transaction import create_transaction
+from snapshot_service import SnapshotService
 
 class TransactionService:
     def __init__(self, db_conn):
         self.db_conn = db_conn
+        self.snapshot_service = SnapshotService(self.db_conn)
 
     def deposit(self, account_id, currency, amount):
         if amount <= 0:
@@ -20,6 +22,7 @@ class TransactionService:
             self.db_conn, "DepositMade", account_id, 
             account_id, currency, currency, amount
         )
+        self.snapshot_service.handle_snapshots(account_id)
         return transaction_id
         
     def withdraw(self, account_id, currency, amount):
@@ -38,6 +41,7 @@ class TransactionService:
             self.db_conn, "WithdrawalMade", account_id, 
             account_id, currency, currency, amount
         )
+        self.snapshot_service.handle_snapshots(account_id)
         return transaction_id
 
     def transfer(self, from_account_id, to_account_id, from_currency, to_currency, amount):
@@ -77,6 +81,8 @@ class TransactionService:
             self.db_conn, "MoneyTransferred", from_account_id, to_account_id,
             from_currency, to_currency, amount
         )
+        self.snapshot_service.handle_snapshots(from_account_id)
+        self.snapshot_service.handle_snapshots(to_account_id)
         return transaction_id
         
 
@@ -110,4 +116,5 @@ class TransactionService:
             self.db_conn, "CurrencyConverted", account_id, account_id,
             from_currency, to_currency, amount
         )
+        self.snapshot_service.handle_snapshots(account_id)
         return transaction_id
