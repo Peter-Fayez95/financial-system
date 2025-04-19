@@ -3,3 +3,5 @@ venv
 !requirements.txt
 database/*.ini
 **/__pycache__/
+**/.vscode/
+**/.pytest_cache/

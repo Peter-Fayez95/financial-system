@@ -1,5 +1,5 @@
 from collections import defaultdict
-from decimal import Decimal
+from decimal import Decimal, getcontext
 import click
 
 VALID_CURRENCIES = ["USD", "EUR", "GBP"]
@@ -18,7 +18,7 @@ def parse_currency_list(ctx, param, value):
             raise click.BadParameter(f"Invalid currency '{cur}'. Must be one of {', '.join(VALID_CURRENCIES)}")
         try:
             currencies[cur] = round(Decimal(amt), 2)
-        except ValueError:
+        except Exception:
             raise click.BadParameter(f"Invalid amount for {cur}: {amt}")
     return currencies
 
