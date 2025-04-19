@@ -9,31 +9,39 @@ from decimal import Decimal
 from .validation import *
 
 
-cfg = get_database_parameters("database/database.ini")
-db_conn = DatabaseConnection(cfg['postgresql']).get_connection()
-account_service = AccountService(db_conn)
-transaction_service = TransactionService(db_conn)
-currency_service = CurrencyExchangeService(db_conn)
-reconstruction_service = ReconstructionService(db_conn)
+
+account_service = AccountService()
+transaction_service = TransactionService()
+currency_service = CurrencyExchangeService()
+reconstruction_service = ReconstructionService()
 
 
 @click.group(help="""
 Multi-Currency Financial Ledger CLI Tool
 
 Examples:
-  cli.py create-account --initial-balance "USD=100,EUR=50"
-  cli.py deposit --account-id acc123 --currency GBP --amount 200
-  cli.py withdraw --account-id acc123 --currency EUR --amount 25
-  cli.py transfer --from-account acc1 --to-account acc2 --from-currency USD --amount 100
-  cli.py convert-currency --account-id acc1 --from-currency EUR --amount 10 --to-currency GBP
-  cli.py update_rate --from-currency USD --to-currency EUR --rate 1.10
-  cli.py get-balance --account-id acc123
-  cli.py get-balance --account-id acc123 --timestamp "2023-10-27 10:00:00"
+
+
+    cli.py create-account --initial-balance "USD=100,EUR=50"
+             
+    cli.py deposit --account-id 123 --currency GBP --amount 200
+             
+    cli.py withdraw --account-id 123 --currency EUR --amount 25
+             
+    cli.py transfer --from-account 123 --to-account 321 --from-currency USD --amount 100
+    
+    cli.py convert-currency --account-id 123 --from-currency EUR --amount 10 --to-currency GBP
+  
+    cli.py update_rate --from-currency USD --to-currency EUR --rate 1.10
+  
+    cli.py get-transactions --account-id 123 --limit 10 --type MoneyTransferred
+  
+    cli.py get-balance --account-id acc123 --timestamp "2023-10-27 10:00:00"
 """)
 def cli():
     pass
 
-@cli.command(help="Create a new account with optional ID and initial balances.")
+@cli.command(help="Create a new account with initial balances in USD, EUR, and GBP.")
 @click.option("--initial-balance", callback=parse_currency_list,
               help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=50).")
 def create_account(initial_balance):
@@ -42,7 +50,7 @@ def create_account(initial_balance):
     click.echo(f"Created account with ID: {account_id}.")
 
 
-@cli.command(help="Deposit currencies into an account.")
+@cli.command(help="Deposit currency into an account.")
 @click.option("--account-id", required=True, type=click.INT, help="Account ID to deposit into.")
 @click.option("--currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Currency")
 @click.option("--amount", required=True, type=click.FLOAT, help="Amount to be deposited")
@@ -54,7 +62,7 @@ def deposit(account_id, currency, amount):
     else:
         click.echo(f"Deposited money into Account: {account_id}, Currency: {currency}, Amount: {amount}")
 
-@cli.command(help="Withdraw currencies from an account.")
+@cli.command(help="Withdraw currency from an account.")
 @click.option("--account-id", required=True, type=click.INT, help="Account ID to withdraw from.")
 @click.option("--currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Currency")
 @click.option("--amount", required=True, type=click.FLOAT, help="Amount to be withdrawn.", callback=validate_amount)
