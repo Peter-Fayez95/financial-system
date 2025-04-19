@@ -2,16 +2,17 @@ from models.transaction import Transaction
 from datetime import datetime
 from decimal import Decimal
 
+
 def create_transaction(
-        conn, 
-        type: str, 
-        from_account: int, 
-        to_account: int, 
-        from_currency: str, 
-        to_currency: str, 
-        amount: Decimal,
-        rate: Decimal = 1
-    ):
+    conn,
+    type: str,
+    from_account: int,
+    to_account: int,
+    from_currency: str,
+    to_currency: str,
+    amount: Decimal,
+    rate: Decimal = 1,
+):
     cursor = conn.cursor()
     cursor.execute(
         """
@@ -19,10 +20,11 @@ def create_transaction(
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING transaction_id;
         """,
-        (type, from_account, to_account, from_currency, to_currency, amount, rate)
+        (type, from_account, to_account, from_currency, to_currency, amount, rate),
     )
     conn.commit()
     return cursor.fetchone()[0]
+
 
 def get_transactions_in_interval(conn, account_id, timestamp1, timestamp2):
     cursor = conn.cursor()
@@ -33,7 +35,7 @@ def get_transactions_in_interval(conn, account_id, timestamp1, timestamp2):
         WHERE (from_account = %s OR to_account = %s) AND timestamp BETWEEN %s AND %s
         ORDER BY timestamp;
         """,
-        (account_id, account_id, timestamp1, timestamp2)
+        (account_id, account_id, timestamp1, timestamp2),
     )
     return [
         Transaction(
@@ -45,10 +47,11 @@ def get_transactions_in_interval(conn, account_id, timestamp1, timestamp2):
             from_currency=row[5],
             to_currency=row[6],
             amount=row[7],
-            rate=row[8]
+            rate=row[8],
         )
         for row in cursor.fetchall()
     ]
+
 
 def count_transactions_for_account(conn, account_id):
     cursor = conn.cursor()
@@ -58,10 +61,11 @@ def count_transactions_for_account(conn, account_id):
         FROM transaction 
         WHERE from_account = %s OR to_account = %s;
         """,
-        (account_id, account_id)
+        (account_id, account_id),
     )
     row = cursor.fetchone()
     return row[0]
+
 
 def get_transaction_history_for_account(conn, account_id, limit=None, type=None):
     cursor = conn.cursor()
@@ -83,7 +87,7 @@ def get_transaction_history_for_account(conn, account_id, limit=None, type=None)
         params += (limit,)
 
     cursor.execute(query, params)
-    
+
     return [
         Transaction(
             id=row[0],
@@ -94,7 +98,7 @@ def get_transaction_history_for_account(conn, account_id, limit=None, type=None)
             from_currency=row[5],
             to_currency=row[6],
             amount=row[7],
-            rate=row[8]
+            rate=row[8],
         )
         for row in cursor.fetchall()
     ]

@@ -1,13 +1,15 @@
 from connection import DatabaseConnection
 from connection_parameters import get_database_parameters
 
+
 def create_tables(conn) -> None:
     """
-    Create the database tables    
+    Create the database tables
     """
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         -- Account Table
         CREATE TABLE IF NOT EXISTS Account (
             account_id SERIAL PRIMARY KEY,
@@ -55,7 +57,8 @@ def create_tables(conn) -> None:
             eur_balance NUMERIC NOT NULL DEFAULT 0,
             gbp_balance NUMERIC NOT NULL DEFAULT 0
         );
-    """)
+    """
+    )
 
     conn.commit()
 
@@ -63,8 +66,9 @@ def create_tables(conn) -> None:
 def main():
     # print(config.sections())
     config = get_database_parameters("database/database.ini")
-    conn = DatabaseConnection(config['postgresql']).get_connection()
+    conn = DatabaseConnection(config["postgresql"]).get_connection()
     create_tables(conn)
+
 
 if __name__ == "__main__":
     main()

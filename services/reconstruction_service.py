@@ -8,12 +8,12 @@ from database.connection_parameters import get_database_parameters
 class ReconstructionService:
     def __init__(self):
         cfg = get_database_parameters("database/database.ini")
-        self.db_conn = DatabaseConnection(cfg['postgresql'])
+        self.db_conn = DatabaseConnection(cfg["postgresql"])
 
     def update_snapshot(self, snapshot, currency, amount):
-        if currency == 'USD':
+        if currency == "USD":
             snapshot.usd_balance += amount
-        elif currency == 'EUR':
+        elif currency == "EUR":
             snapshot.eur_balance += amount
         else:
             snapshot.gbp_balance += amount
@@ -25,29 +25,54 @@ class ReconstructionService:
             latest_snapshot = get_snapshot_at_time(conn, account_id, timestamp)
             if latest_snapshot is None:
                 return None
-            transactions_after_snapshot = get_transactions_in_interval(conn, account_id, latest_snapshot.timestamp, timestamp)
-            
+            transactions_after_snapshot = get_transactions_in_interval(
+                conn, account_id, latest_snapshot.timestamp, timestamp
+            )
 
             for transaction in transactions_after_snapshot:
-                if transaction.type == 'DepositMade':
-                    self.update_snapshot(latest_snapshot, transaction.from_currency, transaction.amount)
+                if transaction.type == "DepositMade":
+                    self.update_snapshot(
+                        latest_snapshot, transaction.from_currency, transaction.amount
+                    )
 
-                elif transaction.type == 'WithdrawalMade':
-                    self.update_snapshot(latest_snapshot, transaction.from_currency, -transaction.amount)
+                elif transaction.type == "WithdrawalMade":
+                    self.update_snapshot(
+                        latest_snapshot, transaction.from_currency, -transaction.amount
+                    )
 
-                elif transaction.type == 'MoneyTransferred':
+                elif transaction.type == "MoneyTransferred":
                     if transaction.from_account == account_id:
-                        self.update_snapshot(latest_snapshot, transaction.from_currency, -transaction.amount)
+                        self.update_snapshot(
+                            latest_snapshot,
+                            transaction.from_currency,
+                            -transaction.amount,
+                        )
                     else:
-                        if transaction.from_currency == transaction.to_currency:   
-                            self.update_snapshot(latest_snapshot, transaction.to_currency, transaction.amount)
+                        if transaction.from_currency == transaction.to_currency:
+                            self.update_snapshot(
+                                latest_snapshot,
+                                transaction.to_currency,
+                                transaction.amount,
+                            )
                         else:
-                            converted_amount = round(Decimal(transaction.amount * transaction.rate), 2)
-                            self.update_snapshot(latest_snapshot, transaction.to_currency, converted_amount)
+                            converted_amount = round(
+                                Decimal(transaction.amount * transaction.rate), 2
+                            )
+                            self.update_snapshot(
+                                latest_snapshot,
+                                transaction.to_currency,
+                                converted_amount,
+                            )
 
                 else:
-                    self.update_snapshot(latest_snapshot, transaction.from_currency, -transaction.amount)
-                    converted_amount = round(Decimal(transaction.amount * transaction.rate), 2)
-                    self.update_snapshot(latest_snapshot, transaction.to_currency, converted_amount)
+                    self.update_snapshot(
+                        latest_snapshot, transaction.from_currency, -transaction.amount
+                    )
+                    converted_amount = round(
+                        Decimal(transaction.amount * transaction.rate), 2
+                    )
+                    self.update_snapshot(
+                        latest_snapshot, transaction.to_currency, converted_amount
+                    )
 
             return latest_snapshot

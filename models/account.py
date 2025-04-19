@@ -2,6 +2,7 @@ from decimal import Decimal
 from typing import DefaultDict
 from dataclasses import dataclass
 
+
 @dataclass
 class Account:
     id: int

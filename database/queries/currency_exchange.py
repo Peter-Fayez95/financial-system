@@ -1,7 +1,7 @@
-
 from datetime import datetime
 from models.currency_exchange import CurrencyExchange
 from decimal import Decimal
+
 
 def insert_exchange_rate(conn, from_currency: str, to_currency: str, rate: Decimal):
     """
@@ -15,23 +15,25 @@ def insert_exchange_rate(conn, from_currency: str, to_currency: str, rate: Decim
         VALUES (%s, %s, %s)
         RETURNING exchange_id;
         """,
-        (from_currency, to_currency, rate)
+        (from_currency, to_currency, rate),
     )
 
     conn.commit()
 
     return cursor.fetchone()[0]
 
+
 def get_latest_rate(conn, from_currency, to_currency):
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT * 
         FROM CurrencyExchange 
         WHERE from_currency = %s AND to_currency = %s 
         ORDER BY timestamp DESC 
         LIMIT 1;
         """,
-        (from_currency, to_currency)
+        (from_currency, to_currency),
     )
     row = cursor.fetchone()
     if row:
@@ -40,20 +42,22 @@ def get_latest_rate(conn, from_currency, to_currency):
             timestamp=row[1],
             from_currency=row[2],
             to_currency=row[3],
-            rate=row[4]
+            rate=row[4],
         )
     return None
 
+
 def get_rate_at_time(conn, from_currency, to_currency, timestamp):
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT * 
         FROM CurrencyExchange 
         WHERE from_currency = %s AND to_currency = %s AND timestamp <= %s
         ORDER BY timestamp DESC
         LIMIT 1;
         """,
-        (from_currency, to_currency, timestamp)
+        (from_currency, to_currency, timestamp),
     )
 
     row = cursor.fetchone()
@@ -63,7 +67,6 @@ def get_rate_at_time(conn, from_currency, to_currency, timestamp):
             timestamp=row[1],
             from_currency=row[2],
             to_currency=row[3],
-            rate=row[4]
+            rate=row[4],
         )
     return None
-    

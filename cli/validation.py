@@ -4,6 +4,7 @@ import click
 
 VALID_CURRENCIES = ["USD", "EUR", "GBP"]
 
+
 def parse_currency_list(ctx, param, value):
     """Parses comma-separated CUR=AMT entries into a dict with currency validation."""
     if not value:
@@ -15,7 +16,9 @@ def parse_currency_list(ctx, param, value):
         cur, amt = pair.strip().split("=")
         cur = cur.upper()
         if cur not in VALID_CURRENCIES:
-            raise click.BadParameter(f"Invalid currency '{cur}'. Must be one of {', '.join(VALID_CURRENCIES)}")
+            raise click.BadParameter(
+                f"Invalid currency '{cur}'. Must be one of {', '.join(VALID_CURRENCIES)}"
+            )
         try:
             currencies[cur] = round(Decimal(amt), 2)
         except Exception:

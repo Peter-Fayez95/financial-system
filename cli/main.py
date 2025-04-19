@@ -9,14 +9,14 @@ from decimal import Decimal
 from .validation import *
 
 
-
 account_service = AccountService()
 transaction_service = TransactionService()
 currency_service = CurrencyExchangeService()
 reconstruction_service = ReconstructionService()
 
 
-@click.group(help="""
+@click.group(
+    help="""
 Multi-Currency Financial Ledger CLI Tool
 
 Examples:
@@ -37,13 +37,18 @@ Examples:
     cli.py get-transactions --account-id 123 --limit 10 --type MoneyTransferred
   
     cli.py get-balance --account-id acc123 --timestamp "2023-10-27 10:00:00"
-""")
+"""
+)
 def cli():
     pass
 
+
 @cli.command(help="Create a new account with initial balances in USD, EUR, and GBP.")
-@click.option("--initial-balance", callback=parse_currency_list,
-              help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=50).")
+@click.option(
+    "--initial-balance",
+    callback=parse_currency_list,
+    help="Comma-separated list of CUR=AMT (e.g. USD=100,EUR=50).",
+)
 def create_account(initial_balance):
     click.echo(f"[CREATE ACCOUNT], Balances: {initial_balance}")
     account_id = account_service.create_account(initial_balance)
@@ -51,26 +56,53 @@ def create_account(initial_balance):
 
 
 @cli.command(help="Deposit currency into an account.")
-@click.option("--account-id", required=True, type=click.INT, help="Account ID to deposit into.")
-@click.option("--currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Currency")
-@click.option("--amount", required=True, type=click.FLOAT, help="Amount to be deposited")
+@click.option(
+    "--account-id", required=True, type=click.INT, help="Account ID to deposit into."
+)
+@click.option(
+    "--currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Currency",
+)
+@click.option(
+    "--amount", required=True, type=click.FLOAT, help="Amount to be deposited"
+)
 def deposit(account_id, currency, amount):
-    click.echo(f"[DEPOSIT] Account: {account_id}, Currency: {currency}, Amount: {amount}")
+    click.echo(
+        f"[DEPOSIT] Account: {account_id}, Currency: {currency}, Amount: {amount}"
+    )
     transaction_id = transaction_service.deposit(account_id, currency, Decimal(amount))
     if transaction_id < 0:
         click.echo("Invalid Account ID.")
     else:
-        click.echo(f"Deposited money into Account: {account_id}, Currency: {currency}, Amount: {amount}")
+        click.echo(
+            f"Deposited money into Account: {account_id}, Currency: {currency}, Amount: {amount}"
+        )
+
 
 @cli.command(help="Withdraw currency from an account.")
-@click.option("--account-id", required=True, type=click.INT, help="Account ID to withdraw from.")
-@click.option("--currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Currency")
-@click.option("--amount", required=True, type=click.FLOAT, help="Amount to be withdrawn.", callback=validate_amount)
+@click.option(
+    "--account-id", required=True, type=click.INT, help="Account ID to withdraw from."
+)
+@click.option(
+    "--currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Currency",
+)
+@click.option(
+    "--amount",
+    required=True,
+    type=click.FLOAT,
+    help="Amount to be withdrawn.",
+    callback=validate_amount,
+)
 def withdraw(account_id, currency, amount):
     click.echo(f"[WITHDRAW] Account: {account_id}, Currency: {currency}")
     transaction_id = transaction_service.withdraw(account_id, currency, Decimal(amount))
     message = f"Withdrawn money from Account: {account_id}, Currency: {currency}, Amount: {amount}"
-  
+
     if transaction_id == -1:
         message = "Invalid account ID"
     elif transaction_id == -2:
@@ -78,44 +110,85 @@ def withdraw(account_id, currency, amount):
 
     click.echo(message)
 
+
 @cli.command(help="Transfer money between accounts (same or different currencies).")
-@click.option("--from-account", required=True, type=click.INT, help="Sender's account ID.")
-@click.option("--to-account", required=True, type=click.INT, help="Receiver's account ID.")
-@click.option("--from-currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Currency to transfer from.")
+@click.option(
+    "--from-account", required=True, type=click.INT, help="Sender's account ID."
+)
+@click.option(
+    "--to-account", required=True, type=click.INT, help="Receiver's account ID."
+)
+@click.option(
+    "--from-currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Currency to transfer from.",
+)
 @click.option("--amount", required=True, type=click.FLOAT, help="Amount to transfer.")
-@click.option("--to-currency", required=False, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False),
-              help="Target currency (for conversion). Omit for same-currency transfer.")
+@click.option(
+    "--to-currency",
+    required=False,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Target currency (for conversion). Omit for same-currency transfer.",
+)
 def transfer(from_account, to_account, from_currency, amount, to_currency):
-    click.echo(f"[TRANSFER] {amount:.2f} {from_currency} from {from_account} to {to_account}" +
-               (f" as {to_currency}" if to_currency else ""))
-    transaction_id = transaction_service.transfer(from_account, to_account, from_currency, to_currency, Decimal(amount))
-    
-    message = f"Transferred money from Account: {from_account}, To Account: {to_account}"
+    click.echo(
+        f"[TRANSFER] {amount:.2f} {from_currency} from {from_account} to {to_account}"
+        + (f" as {to_currency}" if to_currency else "")
+    )
+    transaction_id = transaction_service.transfer(
+        from_account, to_account, from_currency, to_currency, Decimal(amount)
+    )
+
+    message = (
+        f"Transferred money from Account: {from_account}, To Account: {to_account}"
+    )
     if transaction_id == -1:
         message = "Invalid Sender Account ID."
     elif transaction_id == -2:
         message = "Invalid Reciever Account ID."
     elif transaction_id == -3:
         message = f"Insufficient balance in {from_currency}"
-    
+
     click.echo(message)
 
     if transaction_id >= 0:
         if to_currency != from_currency and to_currency is not None:
-            click.echo(f"Converted Amount: {amount} in {from_currency} To {to_currency}")
+            click.echo(
+                f"Converted Amount: {amount} in {from_currency} To {to_currency}"
+            )
         else:
             click.echo(f"Currency: {from_currency}, Amount: {amount}")
-    
+
 
 @cli.command(help="Convert currency within a single account.")
 @click.option("--account-id", required=True, type=click.INT, help="Account ID.")
-@click.option("--from-currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Currency to convert from.")
-@click.option("--amount", required=True, type=click.FLOAT, help="Amount to convert.", callback=validate_amount)
-@click.option("--to-currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False),
-              help="Currency to convert to.")
+@click.option(
+    "--from-currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Currency to convert from.",
+)
+@click.option(
+    "--amount",
+    required=True,
+    type=click.FLOAT,
+    help="Amount to convert.",
+    callback=validate_amount,
+)
+@click.option(
+    "--to-currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Currency to convert to.",
+)
 def convert_currency(account_id, from_currency, amount, to_currency):
-    click.echo(f"[CONVERT CURRENCY] Account: {account_id}, {amount:.2f} {from_currency} to {to_currency or '[DEFAULT]'}")
-    transaction_id = transaction_service.convert_currency(account_id, from_currency, to_currency, Decimal(amount))
+    click.echo(
+        f"[CONVERT CURRENCY] Account: {account_id}, {amount:.2f} {from_currency} to {to_currency or '[DEFAULT]'}"
+    )
+    transaction_id = transaction_service.convert_currency(
+        account_id, from_currency, to_currency, Decimal(amount)
+    )
 
     message = f"Converted {amount} in {from_currency} to {to_currency}"
 
@@ -128,37 +201,76 @@ def convert_currency(account_id, from_currency, amount, to_currency):
 
 
 @cli.command(help="Update currency conversion rate.")
-@click.option("--from-currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Source currency.")
-@click.option("--to-currency", required=True, type=click.Choice(['USD', 'EUR', 'GBP'], case_sensitive=False), help="Target currency.")
-@click.option("--rate", required=True, type=click.FLOAT, help="Exchange rate (e.g. 1.23).", callback=validate_rate)
+@click.option(
+    "--from-currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Source currency.",
+)
+@click.option(
+    "--to-currency",
+    required=True,
+    type=click.Choice(["USD", "EUR", "GBP"], case_sensitive=False),
+    help="Target currency.",
+)
+@click.option(
+    "--rate",
+    required=True,
+    type=click.FLOAT,
+    help="Exchange rate (e.g. 1.23).",
+    callback=validate_rate,
+)
 def update_rate(from_currency, to_currency, rate):
     click.echo(f"[UPDATE RATE] {from_currency} → {to_currency} = {rate:.2f}")
     currency_service.update_exchange_rate(from_currency, to_currency, rate)
     click.echo(f"Exchange rate updated between {from_currency} and {to_currency}")
 
 
-@cli.command(help="Get transaction history for an account. A default limit of the 5 most recent transactions.")
+@cli.command(
+    help="Get transaction history for an account. A default limit of the 5 most recent transactions."
+)
 @click.option("--account-id", required=True, type=click.INT, help="Account ID.")
-@click.option("--limit", type=click.INT, required=False, help="Limit the number of transactions returned.")
-@click.option("--type", required=False, 
-              type=click.Choice(['DepositMade', 'WithdrawalMade', 
-                                 'MoneyTransferred', 'CurrencyConverted']), 
-                                 help="Type of the transactions returned.")
+@click.option(
+    "--limit",
+    type=click.INT,
+    required=False,
+    help="Limit the number of transactions returned.",
+)
+@click.option(
+    "--type",
+    required=False,
+    type=click.Choice(
+        ["DepositMade", "WithdrawalMade", "MoneyTransferred", "CurrencyConverted"]
+    ),
+    help="Type of the transactions returned.",
+)
 def get_transactions(account_id, limit, type):
-    click.echo(f"[TRANSACTION HISTORY] Account ID: {account_id}" + (f", Limit: {limit}" if limit else ""))
-    
-    message = transaction_service.get_transaction_history_for_account(account_id, limit, type)
+    click.echo(
+        f"[TRANSACTION HISTORY] Account ID: {account_id}"
+        + (f", Limit: {limit}" if limit else "")
+    )
+
+    message = transaction_service.get_transaction_history_for_account(
+        account_id, limit, type
+    )
 
     if not message:
-        click.echo(f"No transactions {f'of type {type}' if type else ''} found for this account.")
+        click.echo(
+            f"No transactions {f'of type {type}' if type else ''} found for this account."
+        )
         return
 
     click.echo(message)
 
+
 @cli.command(help="Get Account balance, optionally at a specific timestamp.")
 @click.option("--account-id", required=True, type=click.INT, help="Account ID")
-@click.option("--timestamp", type=click.DateTime(), required=False,
-              help="Get balance at a specific point in time (e.g., 'YYYY-MM-DD HH:MM:SS').")
+@click.option(
+    "--timestamp",
+    type=click.DateTime(),
+    required=False,
+    help="Get balance at a specific point in time (e.g., 'YYYY-MM-DD HH:MM:SS').",
+)
 def get_balance(account_id, timestamp):
     if timestamp:
         click.echo(f"[ACCOUNT BALANCE @ {timestamp}] ID: {account_id}")
@@ -177,17 +289,18 @@ def get_balance(account_id, timestamp):
             # Handle cases where reconstruction failed (e.g., account didn't exist yet, no snapshots found)
             message = f"Could not reconstruct balance for Account ID: {account_id} at {timestamp}. Account might not have existed or no history available."
             # Set a sentinel value to indicate failure like the original logic, if needed downstream
-            usd_balance = -1 
+            usd_balance = -1
     else:
         click.echo(f"[CURRENT ACCOUNT BALANCE] ID: {account_id}")
         # Use account service for current balance (existing logic)
         usd_balance, eur_balance, gbp_balance = account_service.get_balance(account_id)
-        if usd_balance < 0: # Existing check for invalid account ID
-             message = "Invalid account ID"
+        if usd_balance < 0:  # Existing check for invalid account ID
+            message = "Invalid account ID"
         else:
-             message = f"ID: {account_id} | Balance: {usd_balance} USD, {eur_balance} EUR, {gbp_balance} GBP"
+            message = f"ID: {account_id} | Balance: {usd_balance} USD, {eur_balance} EUR, {gbp_balance} GBP"
 
     click.echo(message)
+
 
 if __name__ == "__main__":
     cli()

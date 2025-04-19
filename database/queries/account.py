@@ -1,12 +1,13 @@
 from models.account import Account
 from decimal import Decimal
 
+
 def create_account(
-        conn, 
-        usd_balance: Decimal = Decimal(0), 
-        eur_balance: Decimal = Decimal(0), 
-        gbp_balance: Decimal = Decimal(0)
-    ):
+    conn,
+    usd_balance: Decimal = Decimal(0),
+    eur_balance: Decimal = Decimal(0),
+    gbp_balance: Decimal = Decimal(0),
+):
     """
     Create an account entry in the database. Data should be validated through the previous layer.
     """
@@ -18,7 +19,7 @@ def create_account(
         VALUES (%s, %s, %s)
         RETURNING account_id;
         """,
-        (usd_balance, eur_balance, gbp_balance)
+        (usd_balance, eur_balance, gbp_balance),
     )
 
     conn.commit()
@@ -29,12 +30,13 @@ def create_account(
 def get_account(conn, account_id):
     cursor = conn.cursor()
     cursor.execute(
-    """
+        """
     SELECT * 
     FROM account 
     WHERE account_id = %s
-    """, 
-    (account_id,))
+    """,
+        (account_id,),
+    )
     row = cursor.fetchone()
     if row:
         return Account(
@@ -45,15 +47,12 @@ def get_account(conn, account_id):
         )
     return None
 
+
 def update_balance(conn, account_id, currency, amount):
     """
     Add <amount> to <currency> in Account with <account_id>
     """
-    field_map = {
-        'USD': 'usd_balance',
-        'EUR': 'eur_balance',
-        'GBP': 'gbp_balance'
-    }
+    field_map = {"USD": "usd_balance", "EUR": "eur_balance", "GBP": "gbp_balance"}
     field = field_map[currency]
     cursor = conn.cursor()
 

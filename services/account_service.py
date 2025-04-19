@@ -7,15 +7,14 @@ from database.connection_parameters import get_database_parameters
 class AccountService:
     def __init__(self):
         cfg = get_database_parameters("database/database.ini")
-        self.db_conn = DatabaseConnection(cfg['postgresql'])
+        self.db_conn = DatabaseConnection(cfg["postgresql"])
         self.snapshot_service = SnapshotService()
 
     def create_account(self, currency_dict):
 
-        usd_balance = currency_dict['USD']
-        eur_balance = currency_dict['EUR']
-        gbp_balance = currency_dict['GBP']
-
+        usd_balance = currency_dict["USD"]
+        eur_balance = currency_dict["EUR"]
+        gbp_balance = currency_dict["GBP"]
 
         for balance in [usd_balance, eur_balance, gbp_balance]:
             if balance < 0:
@@ -29,7 +28,6 @@ class AccountService:
             account_id = create_account(conn, usd_balance, eur_balance, gbp_balance)
             self.snapshot_service.handle_snapshots(account_id)
             return account_id
-    
 
     def get_balance(self, account_id):
         with self.db_conn.get_connection() as conn:
@@ -37,5 +35,5 @@ class AccountService:
 
             if account is None:
                 return -1, -1, -1
-            
+
             return account.usd_balance, account.eur_balance, account.gbp_balance
