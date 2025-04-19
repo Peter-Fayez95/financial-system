@@ -66,7 +66,7 @@ class TransactionService:
         if from_currency != to_currency and to_currency is not None:
             exchange = get_latest_rate(self.db_conn, from_currency, to_currency)
             if not exchange:
-                raise ValueError("No exchange rate available")
+                raise ValueError(f"No exchange rate available between {from_currency} and {to_currency}")
             to_amount = amount * exchange.rate
         else:
             to_amount = amount
@@ -81,7 +81,7 @@ class TransactionService:
         # Record transaction
         transaction_id = create_transaction(
             self.db_conn, "MoneyTransferred", from_account_id, to_account_id,
-            from_currency, to_currency, amount
+            from_currency, to_currency, amount, exchange.rate
         )
         self.snapshot_service.handle_snapshots(from_account_id)
         self.snapshot_service.handle_snapshots(to_account_id)
@@ -102,7 +102,7 @@ class TransactionService:
         if from_currency != to_currency:
             exchange = get_latest_rate(self.db_conn, from_currency, to_currency)
             if not exchange:
-                raise ValueError("No exchange rate available")
+                raise ValueError(f"No exchange rate available between {from_currency} and {to_currency}")
             to_amount = amount * exchange.rate
         else:
             to_amount = amount
@@ -116,7 +116,7 @@ class TransactionService:
         # Record transaction
         transaction_id = create_transaction(
             self.db_conn, "CurrencyConverted", account_id, account_id,
-            from_currency, to_currency, amount
+            from_currency, to_currency, amount, exchange.rate
         )
         self.snapshot_service.handle_snapshots(account_id)
         return transaction_id
@@ -138,14 +138,14 @@ class TransactionService:
             elif tx.type == 'CurrencyConverted':
                 details += f", From Curr: {tx.from_currency}, Amt: {tx.amount}, To Curr: {tx.to_currency}"
                 if tx.from_currency != tx.to_currency:
-                    rate = self.currency_exchange_service.get_rate_at_time(tx.from_currency, tx.to_currency, tx.timestamp)
+                    rate = tx.rate
                     details += f", Rate: {rate}"
             elif tx.type == 'MoneyTransferred':
                 details += f", From: {tx.from_account}, To: {tx.to_account}"
                 details += f", From Curr: {tx.from_currency}, Amt: {tx.amount}"
                 if tx.to_currency and tx.from_currency != tx.to_currency:
                     details += f", To Curr: {tx.to_currency}"
-                    rate = self.currency_exchange_service.get_rate_at_time(tx.from_currency, tx.to_currency, tx.timestamp)
+                    rate = tx.rate
                     details += f", Rate: {rate}"
                 elif tx.to_currency: # Handle same currency transfer case where to_currency might be set
                      details += f", To Curr: {tx.to_currency}"

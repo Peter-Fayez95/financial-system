@@ -31,7 +31,9 @@ def get_latest_snapshot(conn, account_id):
         """
         SELECT * 
         FROM snapshot
-        WHERE account_id = %s;
+        WHERE account_id = %s
+        ORDER BY timestamp DESC
+        LIMIT 1;
         """,
         (account_id)
     )

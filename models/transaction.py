@@ -12,3 +12,4 @@ class Transaction:
     from_currency: str
     to_currency: str
     amount: Decimal
+    rate: Decimal

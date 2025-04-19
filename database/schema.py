@@ -42,7 +42,8 @@ def create_tables(conn) -> None:
             timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
             from_currency VARCHAR(3) NOT NULL,
             to_currency VARCHAR(3),
-            amount NUMERIC NOT NULL
+            amount NUMERIC NOT NULL,
+            rate NUMERIC DEFAULT 1,
         );           
 
         -- Snapshots Table

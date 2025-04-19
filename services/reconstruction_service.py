@@ -38,20 +38,12 @@ class ReconstructionService:
                     if transaction.from_currency == transaction.to_currency:   
                         self.update_snapshot(latest_snapshot, transaction.to_currency, transaction.amount)
                     else:
-                        exchange_rate_at_time = get_rate_at_time(self.db_conn, 
-                                                         transaction.from_currency, 
-                                                         transaction.to_currency, 
-                                                         transaction.timestamp)
-                        converted_amount = round(Decimal(transaction.amount * exchange_rate_at_time), 2)
+                        converted_amount = round(Decimal(transaction.amount * transaction.rate), 2)
                         self.update_snapshot(latest_snapshot, transaction.to_currency, converted_amount)
 
             else:
-                exchange_rate_at_time = get_rate_at_time(self.db_conn, 
-                                                         transaction.from_currency, 
-                                                         transaction.to_currency, 
-                                                         transaction.timestamp)
                 self.update_snapshot(latest_snapshot, transaction.from_currency, -transaction.amount)
-                converted_amount = round(Decimal(transaction.amount * exchange_rate_at_time), 2)
+                converted_amount = round(Decimal(transaction.amount * transaction.rate), 2)
                 self.update_snapshot(latest_snapshot, transaction.to_currency, converted_amount)
 
         return latest_snapshot
